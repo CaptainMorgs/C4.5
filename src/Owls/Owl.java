@@ -1,14 +1,16 @@
 package Owls;
 
-public abstract class Owl {
+public class Owl {
 
 	private double bodyLength, wingLength, bodyWidth, wingWidth;
+	private String type;
 	
-	public Owl(double bodyLength, double wingLength, double bodyWidth, double wingWidth) {
+	public Owl(double bodyLength, double wingLength, double bodyWidth, double wingWidth, String type) {
 		this.bodyLength = bodyLength;
 		this.wingLength = wingLength;
 		this.bodyWidth = bodyWidth;
 		this.wingWidth = wingWidth;
+		this.type = type;
 	}
 
 	public double getBodyLength() {
@@ -43,9 +45,19 @@ public abstract class Owl {
 		this.wingWidth = wingWidth;
 	}
 
+	
+
 	@Override
 	public String toString() {
-		return this.getClass().getName() + " [bodyLength=" + bodyLength + ", wingLength=" + wingLength + ", bodyWidth=" + bodyWidth
-				+ ", wingWidth=" + wingWidth + "]";
+		return "Owl [bodyLength=" + bodyLength + ", wingLength=" + wingLength + ", bodyWidth=" + bodyWidth
+				+ ", wingWidth=" + wingWidth + ", type=" + type + "]";
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 }
