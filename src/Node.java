@@ -5,8 +5,10 @@ public class Node<T> {
     public List<Node<T>> children = new ArrayList<Node<T>>();
     private Node<T> parent = null;
     public String attributeName;
-    public boolean terminal;
+    public boolean isLeaf;
     public double splitValue;
+    
+    
 
    /* public Node(T data) {
         this.data = data;
@@ -14,7 +16,7 @@ public class Node<T> {
     
     public Node(String attributeName, boolean terminal) {
         this.attributeName = attributeName;
-        this.terminal = terminal;
+        this.isLeaf = terminal;
     }
     
     /*public Node(String attributeName, Node parent) {
