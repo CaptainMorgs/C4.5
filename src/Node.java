@@ -2,34 +2,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node<T> {
-    private List<Node<T>> children = new ArrayList<Node<T>>();
+    public List<Node<T>> children = new ArrayList<Node<T>>();
     private Node<T> parent = null;
-    private T data = null;
-    private String attributeName;
+    public String attributeName;
+    public boolean terminal;
+    public double splitValue;
 
-    public Node(T data) {
+   /* public Node(T data) {
         this.data = data;
+    }*/
+    
+    public Node(String attributeName, boolean terminal) {
+        this.attributeName = attributeName;
+        this.terminal = terminal;
     }
     
-    public Node(String attributeName) {
+    /*public Node(String attributeName, Node parent) {
         this.attributeName = attributeName;
-    }
+    }*/
 
-    public Node(T data, Node<T> parent) {
+
+    /*public Node(T data, Node<T> parent) {
         this.data = data;
         this.parent = parent;
-    }
+    }*/
     
-    public Node(T data, Node<T> parent, String attributeName) {
+   /* public Node(T data, Node<T> parent, String attributeName) {
         this.data = data;
         this.parent = parent;
         this.attributeName = attributeName;
-    }
+    }*/
 
-    public Node(T data, String attributeName) {
+   /* public Node(T data, String attributeName) {
         this.data = data;
         this.attributeName = attributeName;
-    }
+    }*/
     
     public List<Node<T>> getChildren() {
         return children;
@@ -40,24 +47,24 @@ public class Node<T> {
         this.parent = parent;
     }
 
-    public void addChild(T data) {
+    /*public void addChild(T data) {
         Node<T> child = new Node<T>(data);
         child.setParent(this);
         this.children.add(child);
-    }
+    }*/
 
     public void addChild(Node<T> child) {
         child.setParent(this);
         this.children.add(child);
     }
 
-    public T getData() {
+    /*public T getData() {
         return this.data;
     }
 
     public void setData(T data) {
         this.data = data;
-    }
+    }*/
 
     public boolean isRoot() {
         return (this.parent == null);
@@ -76,8 +83,18 @@ public class Node<T> {
 
 	@Override
 	public String toString() {
-		return "Node [children=" + children + ", data=" + data + ", attributeName="
+		return "Node [children=" + children + ", attributeName="
 				+ attributeName + "]";
+	}
+	
+	public void print(){
+		System.out.println("Label " + attributeName);
+		
+		for(Node child: children) {
+			child.print();
+		}
+		
+		
 	}
     
     

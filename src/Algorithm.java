@@ -80,9 +80,39 @@ public class Algorithm {
 		
 		System.out.println("");
 		System.out.println(decisionTree.toString());
+		decisionTree.print();
 		
+		test(testingOwlList, decisionTree);
 
 	}
+	
+	// Classifies an instance (requires that a tree is already built)
+		private static String classify(Owl owl, Node node) {
+			if (node.terminal)
+				return node.attributeName;
+			
+				double instanceValue = owl.get(node.attributeName);
+				if (instanceValue <= node.splitValue)
+					return classify(owl, (Node)node.children.get(0));
+				else return classify(owl, (Node)node.children.get(1));
+			
+		}
+		
+		// Tests a set of instances, prints results
+		public static void test(List<Owl> owls, Node<List<Owl>> decisionTree) {
+			System.out.println("\n\nListed as: <predicted class> <actual class>");
+			int correct = 0;
+			for (Owl owl : owls) {
+				String predicted = classify(owl, decisionTree);
+				System.out.println(predicted + " " + owl.getType());
+				if (predicted.equals(owl.getType())) 
+					correct++;	
+			}
+			System.out.println("\nCorrect: " + correct);
+			System.out.println("Total: " + owls.size());
+			double hitRate = (correct * 1.0) / (owls.size() * 1.0);
+			System.out.println("Hit Rate: " + (hitRate * 100) + "%");
+		}
 
 	private static void printStuff() {
 
@@ -99,34 +129,16 @@ public class Algorithm {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Node<List<Owl>> generateDecisionTree(List<Owl> owls, List<Owl> parentOwls) {
-	
-		/*
-		 * For each attribute a, find the normalized information gain ratio from
-		 * splitting on a.
-		 * 
-		 * Let a_best be the attribute with the highest normalized information
-		 * gain.
-		 * 
-		 * Create a decision node that splits on a_best.
-		 * 
-		 * Recur on the sublists obtained by splitting on a_best, and add those
-		 * nodes as children of node.
-		 */
-
-		// calculate information gain from splitting on bodyLength
-
-		// Returns null if no more features / positive gain features
-		
+	private static Node<List<Owl>> generateDecisionTree(List<Owl> owls, List<Owl> parentOwls) {	
 		
 		if (owls.isEmpty()){
 			System.err.println("owls is empty");
-			return new Node(getMostFrequentType(parentOwls));
+			return new Node(getMostFrequentType(parentOwls), true);
 		}
 		
 		if(checkAllSameLabel(owls)){
 			System.err.println("all same label");
-			return new Node(owls.get(0).getType());
+			return new Node(owls.get(0).getType(), true);
 		}
 				String bestAttribute = bestAttribute(owls, attributes);
 				if (bestAttribute == null) {
@@ -134,10 +146,10 @@ public class Algorithm {
 					System.err.println("best attribute is null");
 			//		return new Node("best attribute is null");
 			//		return null;
-					return new Node(getMostFrequentType(owls));
+					return new Node(getMostFrequentType(owls), true);
 				}
 				//Make the root node with the whole owl list as its data and give it the label of bestAttribute
-				Node root = new Node(owls, bestAttribute);
+				Node root = new Node(bestAttribute, false);
 				
 				
 				// Partition instances based on best attribute
@@ -147,7 +159,7 @@ public class Algorithm {
 				double currentSplitValue = bestSplitValue;
 				
 				//	root.numeric = true;
-				//	root.splitValue = currentSplitValue;
+					root.splitValue = currentSplitValue;
 					List<Owl> leq = new ArrayList<Owl>();
 					List<Owl> gtr = new ArrayList<Owl>();
 					for (Owl owl : owls) {
