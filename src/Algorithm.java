@@ -12,7 +12,7 @@ import Owls.Owl;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class Algorithm {
 
-	private int debug = 0;
+	private static int debug = 0;
 
 	public static List<Owl> owlList;
 
@@ -30,6 +30,11 @@ public class Algorithm {
 	private static Double splitValue;
 
 	private static Double bestSplitValue;
+
+	public static int numCorrectlyClassified;
+	public static int numIncorrectlyClassified;
+	public static int total;
+	public static double successRate;
 
 	public static void main(String args[]) {
 
@@ -68,6 +73,40 @@ public class Algorithm {
 
 	}
 
+	public static void runC45() {
+
+		attributes.add("bodyLength");
+		attributes.add("wingLength");
+		attributes.add("bodyWidth");
+		attributes.add("wingWidth");
+
+		CSVLoader2.loadCSV();
+
+		owlList = CSVLoader2.getOwlList();
+
+		// shuffle the list
+		Collections.shuffle(owlList);
+
+		// TODO taken off internet
+		int trainingSetSize = (int) Math.floor((owlList.size() * 0.4));
+
+		// split list into (40%)training and (60%)testing
+		trainingOwlList = owlList.subList(0, trainingSetSize);
+
+		// TODO check that all owls are unique
+		testingOwlList = owlList.subList(trainingSetSize, owlList.size());
+
+		System.out.println("No of owls in training set " + trainingOwlList.size());
+		System.out.println("");
+
+		Node<List<Owl>> decisionTree = generateDecisionTree(trainingOwlList, trainingOwlList);
+
+		System.out.println("");
+		decisionTree.print();
+
+		test(testingOwlList, decisionTree);
+	}
+
 	// Classifies an owl
 	private static String classify(Owl owl, Node node) {
 		// if a node is a leaf then return the nodes attribute name
@@ -98,8 +137,14 @@ public class Algorithm {
 		}
 		System.out.println("\nCorrect: " + correct);
 		System.out.println("Total: " + owls.size());
-		double hitRate = (correct * 1.0) / (owls.size() * 1.0);
+		double hitRate = 0.0;
+		hitRate = (correct * 1.0) / (owls.size() * 1.0);
 		System.out.println("Hit Rate: " + (hitRate * 100) + "%");
+
+		numCorrectlyClassified = correct;
+		numIncorrectlyClassified = owls.size() - correct;
+		successRate = hitRate;
+		total = owls.size();
 	}
 
 	private static void printStuff() {
@@ -209,76 +254,75 @@ public class Algorithm {
 	}
 
 	/*
-	 * Returns best attribute for given instances, remaining attributes Returns
-	 * null if no attribute has positive information gain Returns null if no
-	 * candidate splits remaining
+	 * Returns best attribute owls, remaining attributes Returns null if no
+	 * attribute has positive information gain Returns null if no candidate
+	 * splits remaining
 	 */
-	private static String getAttributeToSplitOn(List<Owl> instances, List<String> attributes) {
-		double maxGain = Double.MIN_VALUE;
-		String best = null;
+	private static String getAttributeToSplitOn(List<Owl> owls, List<String> attributes) {
+		double maxInfoGain = 0.0;
+		String bestAtt = null;
 
 		for (String attribute : attributes) {
-			Double gain = gain(instances, attribute);
-			System.err.println("Gain of attribute " + attribute + " is " + gain);
+			Double infoGain = getMaxInformationGain(owls, attribute);
+			System.out.println("Gain of attribute " + attribute + " is " + infoGain);
 
-			if (gain > maxGain) {
-				maxGain = gain;
-				best = attribute;
+			if (infoGain > maxInfoGain) {
+				maxInfoGain = infoGain;
+				bestAtt = attribute;
 				// bestSplitValue gets split value of numeric attribute with
 				// highest gain
 				bestSplitValue = splitValue;
 			}
 		}
-		if (maxGain <= 0.0)
+		if (maxInfoGain <= 0.0)
 			return null;
-		/*
-		 * for (String attribute : attributes) {
-		 * System.out.println("Gain of attribute " + attribute + " is " + gain);
-		 * }
-		 */
-		return best;
+
+		if (debug == 1) {
+			for (String attribute : attributes) {
+				System.out.println("Gain of attribute " + attribute + " is " + maxInfoGain);
+			}
+		}
+
+		return bestAtt;
 	}
 
-	// Calculates (maximum) information gain over instance for the attribute
-	private static double gain(List<Owl> owls, String attribute) {
+	// Calculates max information gain over owls for the attribute
+	private static double getMaxInformationGain(List<Owl> owls, String attribute) {
 		if (owls.isEmpty())
 			return 0.0;
-		// if (!attribute.numeric)
-		// return entropy(instances) - conditionalEntropy(instances, attribute);
-		// else {
+
 		// Get list of possible split points
 		// TODO use something other than a tree set
 		TreeSet<Double> values = new TreeSet<Double>();
 		for (Owl owl : owls)
 			// TODO not hardcode to bodyLength
 			values.add(owl.get(attribute));
-		// System.out.println("Size of values " + values.size());
 
-		List<Double> candidateSplits = new ArrayList<Double>();
+		List<Double> possibleSplitValues = new ArrayList<Double>();
 		// TODO change this
 		Iterator<Double> num1 = values.iterator();
 		Iterator<Double> num2 = values.iterator();
 		if (num2.hasNext())
 			num2.next();
 		while (num2.hasNext())
-			candidateSplits.add((num1.next() + num2.next()) / 2);
+			possibleSplitValues.add((num1.next() + num2.next()) / 2);
 
-		/*
-		 * System.out.println("Candidate Splits " + candidateSplits.toString());
-		 */
+		if (debug == 1)
+			System.out.println("Candidate Splits " + possibleSplitValues.toString());
 
 		// Find maximum gain from among possible split points
-		double maxGain = Double.MIN_VALUE;
-		splitValue = Double.MIN_VALUE;
-		for (Double split : candidateSplits) {
-			double gain = entropy(owls) - entropy(owls, attribute, split);
-			// System.out.println("gain " + gain);
-			if (gain > maxGain) {
-				maxGain = gain;
+		double maxInfoGain = 0.0;
+		splitValue = 0.0;
+		for (Double split : possibleSplitValues) {
+			double infoGain = getEntropy(owls) - getEntropy(owls, attribute, split);
+			if (debug == 1)
+				System.out.println("gain " + infoGain);
+			if (infoGain > maxInfoGain) {
+				maxInfoGain = infoGain;
 				splitValue = split;
 			}
 		}
-		return maxGain;
+		return maxInfoGain;
 	}
 	// }
 
@@ -358,44 +402,42 @@ public class Algorithm {
 			return false;
 	}
 
-	private static double entropy(List<Owl> owls, String attribute, double splitValue) {
+	private static double getEntropy(List<Owl> owls, String attribute, double splitValue) {
 
 		if (owls.isEmpty())
 			return 0.0;
 
 		// Divide the list based on the split point
-		List<Owl> leq = new ArrayList<Owl>();
-		List<Owl> gtr = new ArrayList<Owl>();
+		List<Owl> owlsLessThan = new ArrayList<Owl>();
+		List<Owl> owlsGreaterThan = new ArrayList<Owl>();
 
 		for (Owl owl : owls) {
 			double value = owl.get(attribute);
 			if (value <= splitValue)
-				leq.add(owl);
+				owlsLessThan.add(owl);
 			else
-				gtr.add(owl);
+				owlsGreaterThan.add(owl);
 		}
 
-		/*
-		 * System.out.println("No of owls less than split value " + leq.size());
-		 * System.out.println("No of owls greater than split value " +
-		 * gtr.size());
-		 */
+		if (debug == 1) {
+			System.out.println("No of owls less than split value " + owlsLessThan.size());
+			System.out.println("No of owls greater than split value " + owlsGreaterThan.size());
+		}
 
-		double prLeq = (leq.size() * 1.0) / (owls.size() * 1.0);
-		double prGtr = (gtr.size() * 1.0) / (owls.size() * 1.0);
+		double ratioGreater = (double) owlsLessThan.size() / (double) owls.size();
+		double ratioLess = (double) owlsGreaterThan.size() / (double) owls.size();
 
-		/*
-		 * System.out.println("No of owls less than split value as a fraction "
-		 * + prLeq); System.out.
-		 * println("No of owls greater than split value as a fraction " +
-		 * prGtr); System.out.println("");
-		 */
+		if (debug == 1) {
+			System.out.println("No of owls less than split value as a fraction " + ratioLess);
+			System.out.println("No of owls greater than split value as a fraction " + ratioGreater);
+			System.out.println("");
+		}
 
-		return prLeq * entropy(leq) + prGtr * entropy(gtr);
+		return ratioGreater * getEntropy(owlsLessThan) + ratioLess * getEntropy(owlsGreaterThan);
 
 	}
 
-	private static double entropy(List<Owl> owls) {
+	private static double getEntropy(List<Owl> owls) {
 
 		if (owls.isEmpty())
 			return 0.0;
@@ -419,20 +461,23 @@ public class Algorithm {
 				System.err.println("Unable to classify, unknown type " + owl.getType());
 		}
 
-		// System.out.println(label1 + " no. " + label1count);
-		// System.out.println(label2 + " no. " + label2count);
-		// System.out.println(label3 + " no. " + label3count);
-		// System.out.println("");
+		if (debug == 1) {
+			System.out.println(label1 + " no. " + label1count);
+			System.out.println(label2 + " no. " + label2count);
+			System.out.println(label3 + " no. " + label3count);
+			System.out.println("");
+		}
 
 		// Calculate entropy
-		double prLabel1 = (label1count * 1.0) / (total * 1.0);
-		double prLabel2 = (label2count * 1.0) / (total * 1.0);
-		double prLabel3 = (label3count * 1.0) / (total * 1.0);
+		double prLabel1 = (double) label1count / (double) total;
+		double prLabel2 = (double) label2count / (double) total;
+		double prLabel3 = (double) label3count / (double) total;
 
-		return -(prLabel1 * logBase2(prLabel1) + prLabel2 * logBase2(prLabel2) + prLabel3 * logBase2(prLabel3));
+		return -(prLabel1 * getLogBase2(prLabel1) + prLabel2 * getLogBase2(prLabel2)
+				+ prLabel3 * getLogBase2(prLabel3));
 	}
 
-	private static double logBase2(double x) {
+	private static double getLogBase2(double x) {
 		if (x == 0.0)
 			return 0.0;
 		return (Math.log(x) / Math.log(2.0));

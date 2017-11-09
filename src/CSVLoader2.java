@@ -25,7 +25,7 @@ public class CSVLoader2 {
 
 
 	public static void loadCSV() {
-		 
+		owlList.clear();
 	 
 	String csvFileLocation = "C:/Users/John/Downloads/owls15.csv";
 	
