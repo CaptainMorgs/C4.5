@@ -13,6 +13,10 @@ import java.awt.event.ActionListener;
 
 import javax.swing.Action;
 import javax.swing.JTextArea;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import javax.swing.JTextField;
 
 public class Gui extends JFrame {
 
@@ -40,21 +44,36 @@ public class Gui extends JFrame {
 	 */
 	public Gui() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 552, 572);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
+		GridBagLayout gbl_contentPane = new GridBagLayout();
+		gbl_contentPane.columnWidths = new int[]{527, 0};
+		gbl_contentPane.rowHeights = new int[]{23, 40, 328, 0};
+		gbl_contentPane.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		contentPane.setLayout(gbl_contentPane);
 		
 		JButton btnNewButton = new JButton("Run C4.5");
 		btnNewButton.setAction(action);
 		
 		
-		contentPane.add(btnNewButton, BorderLayout.NORTH);
+		GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
+		gbc_btnNewButton.anchor = GridBagConstraints.NORTH;
+		gbc_btnNewButton.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnNewButton.insets = new Insets(0, 0, 5, 0);
+		gbc_btnNewButton.gridx = 0;
+		gbc_btnNewButton.gridy = 0;
+		contentPane.add(btnNewButton, gbc_btnNewButton);
 		
 		JTextArea txtrDefault = new JTextArea();
 		txtrDefault.setText("default");
-		contentPane.add(txtrDefault, BorderLayout.CENTER);
+		GridBagConstraints gbc_txtrDefault = new GridBagConstraints();
+		gbc_txtrDefault.fill = GridBagConstraints.BOTH;
+		gbc_txtrDefault.gridx = 0;
+		gbc_txtrDefault.gridy = 2;
+		contentPane.add(txtrDefault, gbc_txtrDefault);
 		
 		btnNewButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){

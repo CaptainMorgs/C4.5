@@ -35,6 +35,8 @@ public class Algorithm {
 	public static int numIncorrectlyClassified;
 	public static int total;
 	public static double successRate;
+	
+	public static double trainingSize = 0.4; 
 
 	public static void main(String args[]) {
 
@@ -44,16 +46,16 @@ public class Algorithm {
 		attributes.add("wingWidth");
 
 		// load the csv
-		CSVLoader2.loadCSV();
+		CSVLoader.loadCSV();
 
 		// get the list of owls from the csv file
-		owlList = CSVLoader2.getOwlList();
+		owlList = CSVLoader.getOwlList();
 
 		// shuffle the list
 		Collections.shuffle(owlList);
 
 		// TODO taken off internet
-		int trainingSetSize = (int) Math.floor((owlList.size() * 0.4));
+		int trainingSetSize = (int) Math.floor((owlList.size() * trainingSize));
 
 		// split list into (40%)training and (60%)testing
 		trainingOwlList = owlList.subList(0, trainingSetSize);
@@ -80,9 +82,9 @@ public class Algorithm {
 		attributes.add("bodyWidth");
 		attributes.add("wingWidth");
 
-		CSVLoader2.loadCSV();
+		CSVLoader.loadCSV();
 
-		owlList = CSVLoader2.getOwlList();
+		owlList = CSVLoader.getOwlList();
 
 		// shuffle the list
 		Collections.shuffle(owlList);
