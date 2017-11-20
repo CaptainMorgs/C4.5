@@ -25,6 +25,7 @@ public class Gui extends JFrame {
 	private JPanel contentPane;
 	private final Action action = new SwingAction();
 	private final Action action_1 = new SwingAction_1();
+	private Algorithm algorithm = new Algorithm();
 
 	/**
 	 * Launch the application.
@@ -87,7 +88,7 @@ public class Gui extends JFrame {
 
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Algorithm.runC45();
+				algorithm.runC45();
 
 				List<Result> results = new ArrayList<>();
 				results = Algorithm.results;

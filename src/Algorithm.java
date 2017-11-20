@@ -5,129 +5,83 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeSet;
 
 import Owls.Owl;
+import Owls.Sample;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class Algorithm {
 
-	private static int debug = 0;
+	public static boolean debug = true;
 
-	private static List<Owl> owlList;
+	private List<Sample> sampleList, trainingSampleList, testingSampleList;
 
-	private static List<Owl> trainingOwlList;
-
-	private static List<Owl> testingOwlList;
-
-	private static List<String> attributes = new ArrayList<String>();
+	private List<String> attributes = new ArrayList<String>();
 
 	public static boolean outputToFile = false;
 
-	// Labels to classify as
-	private static String label1 = "BarnOwl";
-	private static String label2 = "LongEaredOwl";
-	private static String label3 = "SnowyOwl";
+	public static int numCorrectlyClassified, numIncorrectlyClassified, total;
 
-	private static Double bestSplitValue;
-
-	public static int numCorrectlyClassified;
-	public static int numIncorrectlyClassified;
-	public static int total;
 	public static double successRate;
 	public static List<Result> results = new ArrayList<>();
+
 	public static double classificationAccuracyAvg = 0.0;
+
 	public static double trainingSize = 0.4;
 
-	public static void main(String args[]) {
+	public void runC45() {
 
-		attributes.add("bodyLength");
-		attributes.add("wingLength");
-		attributes.add("bodyWidth");
-		attributes.add("wingWidth");
+		CSVLoader csvLoader = new CSVLoader();
+		csvLoader.loadCSV();
 
-		// load the csv
-		CSVLoader.loadCSV();
+		sampleList = csvLoader.getSampleList();
 
-		// get the list of owls from the csv file
-		List<Owl> owlList = CSVLoader.getOwlList();
+		attributes = csvLoader.getFeatureNames();
+		if (debug)
+			System.out.println("Starting attributes " + attributes.toString());
 
-		// shuffle the list
-		Collections.shuffle(owlList);
-
-		// TODO taken off internet
-		int trainingSetSize = (int) Math.floor((owlList.size() * trainingSize));
-
-		// split list into (40%)training and (60%)testing
-		trainingOwlList = owlList.subList(0, trainingSetSize);
-
-		// TODO check that all owls are unique
-		testingOwlList = owlList.subList(trainingSetSize, owlList.size());
-
-		System.out.println("No of owls in training set " + trainingOwlList.size());
-		System.out.println("");
-
-		Node<List<Owl>> decisionTree = generateDecisionTree(trainingOwlList, trainingOwlList);
-
-		System.out.println("");
-		decisionTree.print();
-
-		testWithDecisionTree(testingOwlList, decisionTree);
-
-	}
-
-	public static void runC45() {
-
-		CSVLoader.loadCSV();
-
-		owlList = CSVLoader.getOwlList();
-
-		// shuffle the list
-		// Collections.shuffle(owlList);
-
-		// TODO taken off internet
-		// int trainingSetSize = (int) Math.floor((owlList.size() * 0.4));
-
-		// split list into (40%)training and (60%)testing
-		// trainingOwlList = owlList.subList(0, trainingSetSize);
-
-		// TODO check that all owls are unique
-		// testingOwlList = owlList.subList(trainingSetSize, owlList.size());
-
-		// System.out.println("No of owls in training set " +
-		// trainingOwlList.size());
-		// System.out.println("");
-
-		// Node<List<Owl>> decisionTree = generateDecisionTree(trainingOwlList,
-		// trainingOwlList);
-
-		testTenTimes();
-
-		// System.out.println("");
-		// decisionTree.print();
-
-		// testWithDecisionTree(testingOwlList, decisionTree);
+		testTenTimes(sampleList, attributes);
 	}
 
 	/**
 	 * Run the C4.5 alg on test data 10 times with different random divisions 10
 	 * times
 	 * 
+	 * @param sampleList
+	 * 
 	 * @param decisionTree
 	 */
-	private static void testTenTimes() {
+	private void testTenTimes(List<Sample> sampleList, List<String> attributes) {
 
 		results.clear();
 
 		for (int i = 0; i < 10; i++) {
-			randomlyDivideData();
 
-			Node<List<Owl>> decisionTree = generateDecisionTree(trainingOwlList, trainingOwlList);
+			// Could use a better method for randomly selecting data but asked
+			// lecturer
+			// and he said it was out of scope for the assignment
+			Collections.shuffle(sampleList);
 
-			Result result = testWithDecisionTree(testingOwlList, decisionTree);
+			// TODO taken off internet
+			int trainingSetSize = (int) Math.floor((sampleList.size() * 0.4));
+
+			trainingSampleList = sampleList.subList(0, trainingSetSize);
+
+			testingSampleList = sampleList.subList(trainingSetSize, sampleList.size());
+
+			if (debug)
+				System.out.println("Calling generateDecisionTree with fields " + attributes.toString());
+
+			Node<List<Sample>> decisionTree = generateDecisionTree(trainingSampleList, trainingSampleList, attributes);
+
+			Result result = testWithDecisionTree(testingSampleList, decisionTree);
 
 			results.add(result);
 		}
@@ -135,6 +89,12 @@ public class Algorithm {
 		outputPredictedAndActualValuesToFile(results, "results.txt");
 	}
 
+	/**
+	 * Writes predicted and actual values to a file
+	 * 
+	 * @param results
+	 * @param fileName
+	 */
 	private static void outputPredictedAndActualValuesToFile(List<Result> results, String fileName) {
 		if (outputToFile) {
 			try {
@@ -150,52 +110,41 @@ public class Algorithm {
 	}
 
 	/**
-	 * Shuffles the data read from the csv file randomly and partitions it into
-	 * training and testing lists
+	 * Tests a decision tree with a list of samples
+	 * 
+	 * @param samples
+	 * @param decisionTree
+	 * @return
 	 */
-	private static void randomlyDivideData() {
-		// shuffle the list randomly
-		Collections.shuffle(owlList);
-
-		// TODO taken off internet
-		int trainingSetSize = (int) Math.floor((owlList.size() * 0.4));
-
-		trainingOwlList = owlList.subList(0, trainingSetSize);
-
-		testingOwlList = owlList.subList(trainingSetSize, owlList.size());
-
-		// TODO make this better
-		attributes.add("bodyLength");
-		attributes.add("wingLength");
-		attributes.add("bodyWidth");
-		attributes.add("wingWidth");
-
-	}
-
-	// Tests a list of owls, prints the results
-	private static Result testWithDecisionTree(List<Owl> owls, Node<List<Owl>> decisionTree) {
+	private static Result testWithDecisionTree(List<Sample> samples, Node<List<Sample>> decisionTree) {
 
 		int correctlyClassified = 0;
 		double accuracy = 0.0;
 		String fileSummary = "";
 
-		for (Owl owl : owls) {
-			String predicted = classify(owl, decisionTree);
-			if (predicted.equals(owl.getType()))
+		for (Sample sample : samples) {
+			String predicted = classify(sample, decisionTree);
+			if (predicted.equals(sample.getClassifier()))
 				correctlyClassified++;
 
-			String line = "Actual = " + owl.getType() + ", predicted = " + predicted + "\n";
+			String line = "Actual = " + sample.getClassifier() + ", predicted = " + predicted + "\n";
 			fileSummary += line;
 		}
 
-		accuracy = (double) correctlyClassified / (double) owls.size();
-		Result result = new Result(correctlyClassified, owls.size() - correctlyClassified, accuracy, owls.size(),
+		accuracy = (double) correctlyClassified / (double) samples.size();
+		Result result = new Result(correctlyClassified, samples.size() - correctlyClassified, accuracy, samples.size(),
 				fileSummary);
 		return result;
 		// results.add(result);
 
 	}
 
+	/**
+	 * Gets the average classification accuracy value from a list of results
+	 * 
+	 * @param results
+	 * @return
+	 */
 	public static double getAverageClassificationAccuracy(List<Result> results) {
 		Double total = 0.0;
 		for (Result result : results) {
@@ -205,123 +154,137 @@ public class Algorithm {
 		return classificationAccuracyAvg;
 	}
 
-	// Classifies an owl
-	private static String classify(Owl owl, Node node) {
+	/**
+	 * Classifies a sample
+	 * 
+	 * @param sample
+	 * @param node
+	 * @return
+	 */
+	private static String classify(Sample sample, Node node) {
 		// if a node is a leaf then return the nodes attribute name
 		if (node.isLeaf) {
 			return node.attributeName;
 		}
-		// traverse the tree either left or right by comparing the the owls
+		// traverse the tree either left or right by comparing the the samples
 		// value to the nodes split value
-		double owlValue = owl.get(node.attributeName);
+		// TODO tidy up
+		double sampleValue = sample.getFeature(node.attributeName);
 
-		if (owlValue <= node.splitValue)
-			return classify(owl, (Node) node.children.get(0));
+		if (sampleValue <= node.splitValue)
+			return classify(sample, (Node) node.children.get(0));
 
 		else
-			return classify(owl, (Node) node.children.get(1));
+			return classify(sample, (Node) node.children.get(1));
 
 	}
 
-	private static void printStuff() {
+	/**
+	 * Generate a C4.5 decision tree using samples and the list of fields
+	 * 
+	 * @param samples
+	 * @param parentSamples
+	 * @param fields
+	 * @return
+	 */
+	private static Node<List<Sample>> generateDecisionTree(List<Sample> samples, List<Sample> parentSamples,
+			List<String> fields) {
 
-		System.out.println("Training List Size: " + trainingOwlList.size());
-		for (Owl owl : trainingOwlList) {
-			System.out.println(owl.toString());
-		}
-		System.out.println();
+		List<String> localFields = new ArrayList<String>(fields);
 
-		System.out.println("Testing List Size: " + testingOwlList.size());
-		for (Owl owl : testingOwlList) {
-			System.out.println(owl.toString());
-		}
-	}
-
-	private static Node<List<Owl>> generateDecisionTree(List<Owl> owls, List<Owl> parentOwls) {
-
+		System.out.println("Starting localAttributes " + localFields.toString());
 		// if the list of owls is empty return the most frequent type of owl in
 		// the nodes parent
-		if (owls.isEmpty()) {
-			System.err.println("owls is empty");
-			return new Node(getMostFrequentType(parentOwls), true);
+		if (samples.isEmpty()) {
+			if (debug)
+				System.out.println("owls is empty");
+			return new Node(getMostFrequentType(parentSamples), true);
 		}
 
 		// if the list of owls all have the same type then return that type,
 		// calculating inf gain would be pointless
-		if (checkAllSameLabel(owls)) {
-			System.err.println("all same label");
-			return new Node(owls.get(0).getType(), true);
+		if (checkAllSameLabel(samples)) {
+			if (debug)
+				System.out.println("all same label");
+			return new Node(samples.get(0).getClassifier(), true);
 		}
 		// calc attribute with the highest information gain
-		String bestAttribute = BestAttributeCalculator.getAttributeToSplitOn(owls, attributes);
+		String bestFeature = BestFieldCalculator.getFieldToSplitOn(samples, localFields);
 
 		// if bestAttribute is null return most frequent type in owls
-		if (bestAttribute == null) {
-			System.err.println("best attribute is null");
-			return new Node(getMostFrequentType(owls), true);
+		if (bestFeature == null) {
+			if (debug)
+				System.out.println("best attribute is null");
+			return new Node(getMostFrequentType(samples), true);
 		}
 		// TODO think of alternative to bestAttribute
 		// make the root node with the bestAttribute to split on and make the
 		// node not a leaf node
-		Node root = new Node(bestAttribute, false);
+		Node root = new Node(bestFeature, false);
 
 		// Split owls based on best attribute
 		// TODO not use subsets just use two lists
 
-		LinkedHashMap<String, List<Owl>> subsets = new LinkedHashMap<String, List<Owl>>();
+		LinkedHashMap<String, List<Sample>> subsets = new LinkedHashMap<String, List<Sample>>();
 
-		double currentSplitValue = BestAttributeCalculator.bestSplitValue;
+		double currentSplitValue = BestFieldCalculator.bestSplitValue;
 
 		root.splitValue = currentSplitValue;
 
-		List<Owl> owlsLessThan = new ArrayList<Owl>();
-		List<Owl> owlsGreaterThan = new ArrayList<Owl>();
+		List<Sample> samplesLessThan = new ArrayList<Sample>();
+		List<Sample> samplesGreaterThan = new ArrayList<Sample>();
 
 		// loop through owls and add them to the right list by comparing them to
 		// the split value
-		for (Owl owl : owls) {
+		for (Sample sample : samples) {
 
-			double value = owl.get(bestAttribute);
+			double value = sample.getFeature(bestFeature);
 
 			if (value <= currentSplitValue)
-				owlsLessThan.add(owl);
+				samplesLessThan.add(sample);
 			else
-				owlsGreaterThan.add(owl);
+				samplesGreaterThan.add(sample);
 		}
-		subsets.put("owlsLessThan", owlsLessThan);
-		subsets.put("owlsGreaterThan", owlsGreaterThan);
 
-		System.out.println("");
-		System.out.println(
-				"Subsets partitioned on " + bestAttribute + " with a split value of " + currentSplitValue + " ");
-		System.out.println("");
-		System.out.println("Less than list of size " + subsets.get("owlsLessThan").size());
+		subsets.put("samplesLessThan", samplesLessThan);
+		subsets.put("samplesGreaterThan", samplesGreaterThan);
 
-		List<Owl> lessThanOwls = subsets.get("owlsLessThan");
+		if (debug) {
+			System.out.println("");
+			System.out.println(
+					"Subsets partitioned on " + bestFeature + " with a split value of " + currentSplitValue + " ");
+			System.out.println("");
+			System.out.println("Less than list of size " + subsets.get("samplesLessThan").size());
+		}
 
-		for (Owl owl : lessThanOwls)
-			System.out.print(owl.get(bestAttribute) + " with type " + owl.getType() + " ");
-		System.out.println("");
-		System.out.println("");
-		System.out.println("Greater than list of size " + subsets.get("owlsGreaterThan").size());
+		List<Sample> lessThanSamples = subsets.get("samplesLessThan");
 
-		List<Owl> greaterThanOwls = subsets.get("owlsGreaterThan");
+		if (debug) {
+			for (Sample sample : lessThanSamples)
+				System.out.print(sample.getFeature(bestFeature) + " with type " + sample.getClassifier() + " ");
+			System.out.println("");
+			System.out.println("");
+			System.out.println("Greater than list of size " + subsets.get("samplesGreaterThan").size());
+		}
 
-		for (Owl owl : greaterThanOwls)
-			System.out.print(owl.get(bestAttribute) + " with type " + owl.getType() + " ");
+		List<Sample> greaterThanSamples = subsets.get("samplesGreaterThan");
+
+		for (Sample sample : greaterThanSamples)
+			System.out.print(sample.getFeature(bestFeature) + " with type " + sample.getClassifier() + " ");
 
 		// remove the attribute from the list so that is removed from
 		// consideration
-		attributes.remove(bestAttribute);
-		System.out.println("");
-		System.out.println("");
-		System.out.println("New attributes list with bestAtrribute removed " + attributes.toString());
-
+		localFields.remove(bestFeature);
+		if (debug) {
+			System.out.println("");
+			System.out.println("");
+			System.out.println("New localFields list with bestFeature removed " + localFields.toString());
+		}
 		// Iterate through possible values of bestAttribute
 		for (String key : subsets.keySet()) {
 
 			// Add child to subtree of root
-			root.addChild(generateDecisionTree(subsets.get(key), owls));
+			root.addChild(generateDecisionTree(subsets.get(key), samples, localFields));
 
 			// child.splitValue = currentSplitValue;
 
@@ -331,75 +294,71 @@ public class Algorithm {
 
 	// }
 
-	private static String getMostFrequentType(List<Owl> owls) {
+	// TODO rewrite
+	/**
+	 * Gets the most frequently occurring element of a list of samples
+	 * 
+	 * @param samples
+	 * @return
+	 */
+	private static String getMostFrequentType(List<Sample> samples) {
 
-		if (owls.isEmpty()) {
-			System.err.println("empty list");
+		if (samples.isEmpty()) {
+			if(debug)
+				System.out.println("empty list");
 			return null;
 		}
-		// Obtain number of instances in each class
-		int label1count = 0;
-		int label2count = 0;
-		int label3count = 0;
 
-		for (Owl owl : owls) {
-			if (owl.getType().equals(label1))
-				label1count++;
+		Map<Sample, Integer> map = new HashMap();
 
-			else if (owl.getType().equals(label2))
-				label2count++;
-
-			else if (owl.getType().equals(label3))
-				label3count++;
-
-			else
-				System.err.println("Unable to classify, unknown type " + owl.getType());
-		}
-		// get the max of the 3 label counts
-		int max = Math.max(Math.max(label1count, label2count), label3count);
-
-		if (max == label1count) {
-			return label1;
+		for (Sample sample : samples) {
+			Integer val = map.get(sample);
+			map.put(sample, val == null ? 1 : val + 1);
 		}
 
-		else if (max == label2count) {
-			return label2;
+		Entry<Sample, Integer> max = null;
+
+		for (Entry<Sample, Integer> e : map.entrySet()) {
+			if (max == null || e.getValue() > max.getValue())
+				max = e;
 		}
 
-		else if (max == label3count) {
-			return label3;
-		}
-		return null;
+		return max.getKey().getClassifier();
+
 	}
+	
+	
 
-	private static boolean checkAllSameLabel(List<Owl> owls) {
+	/**
+	 * Checks if a list of samples all have the same label, e.g. all of type
+	 * BarnOwl
+	 * 
+	 * @param samples
+	 * @return
+	 */
+	private static boolean checkAllSameLabel(List<Sample> samples) {
 
-		if (owls.isEmpty()) {
-			System.err.println("empty list");
+		if (samples.isEmpty()) {
+			if(debug)
+				System.out.println("empty list");
 			return false;
 		}
-		// Obtain number of instances in each class
-		int label1count = 0;
-		int label2count = 0;
-		int label3count = 0;
 
-		for (Owl owl : owls) {
-			if (owl.getType().equals(label1))
-				label1count++;
+		Map<Sample, Integer> map = new HashMap();
 
-			else if (owl.getType().equals(label2))
-				label2count++;
-
-			else if (owl.getType().equals(label3))
-				label3count++;
-
-			else
-				System.err.println("Unable to classify, unknown type " + owl.getType());
+		for (Sample sample : samples) {
+			Integer val = map.get(sample);
+			map.put(sample, val == null ? 1 : val + 1);
 		}
-		// get the max of the 3 label counts
-		int max = Math.max(Math.max(label1count, label2count), label2count);
 
-		if (max == owls.size()) {
+		Entry<Sample, Integer> max = null;
+
+		for (Entry<Sample, Integer> e : map.entrySet()) {
+			if (max == null || e.getValue() > max.getValue())
+				max = e;
+		}
+
+		if (max.getValue() == samples.size()) {
 			return true;
 		}
 
