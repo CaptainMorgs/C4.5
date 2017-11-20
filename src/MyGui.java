@@ -21,6 +21,8 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import javax.swing.JTextField;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 public class MyGui extends JFrame {
 
@@ -31,6 +33,7 @@ public class MyGui extends JFrame {
 	private JTextField txtPathToFile;
 	public static JTextArea txtrDefault;
 	public static boolean fileNotFound = false;
+	private JTextField textField;
 
 	/**
 	 * Launch the application.
@@ -81,16 +84,6 @@ public class MyGui extends JFrame {
 		gbc_txtrDefault.gridy = 3;
 		contentPane.add(txtrDefault, gbc_txtrDefault);
 
-		txtPathToFile = new JTextField();
-		txtPathToFile.setText("owls15.csv");
-		GridBagConstraints gbc_txtPathToFile = new GridBagConstraints();
-		gbc_txtPathToFile.insets = new Insets(0, 0, 5, 5);
-		gbc_txtPathToFile.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtPathToFile.gridx = 0;
-		gbc_txtPathToFile.gridy = 4;
-		contentPane.add(txtPathToFile, gbc_txtPathToFile);
-		txtPathToFile.setColumns(10);
-
 		btnRunC.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				algorithm.runC45();
@@ -108,8 +101,8 @@ public class MyGui extends JFrame {
 					resultStr += "\n Results file generated...";
 				}
 				txtrDefault.setText(resultStr);
-				
-				if(fileNotFound)
+
+				if (fileNotFound)
 					txtrDefault.setText("File not found");
 			}
 		});
@@ -138,13 +131,69 @@ public class MyGui extends JFrame {
 		gbc_chckbxDebug.gridy = 2;
 		contentPane.add(chckbxDebug, gbc_chckbxDebug);
 
-		chckbxDebug.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (chckbxDebug.isSelected()) {
-					Algorithm.debug = true;
-				} else if (!chckbxDebug.isSelected()) {
-					Algorithm.debug = false;
+		JLabel lblPathToFile = new JLabel("Path to file");
+		GridBagConstraints gbc_lblPathToFile = new GridBagConstraints();
+		gbc_lblPathToFile.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPathToFile.gridx = 0;
+		gbc_lblPathToFile.gridy = 4;
+		contentPane.add(lblPathToFile, gbc_lblPathToFile);
+
+		txtPathToFile = new JTextField();
+		txtPathToFile.setText("owls15.csv");
+		GridBagConstraints gbc_txtPathToFile = new GridBagConstraints();
+		gbc_txtPathToFile.insets = new Insets(0, 0, 5, 5);
+		gbc_txtPathToFile.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtPathToFile.gridx = 0;
+		gbc_txtPathToFile.gridy = 5;
+		contentPane.add(txtPathToFile, gbc_txtPathToFile);
+		txtPathToFile.setColumns(10);
+
+		JLabel lblPercentageSplitOf = new JLabel("Percentage split of test vs training data");
+		GridBagConstraints gbc_lblPercentageSplitOf = new GridBagConstraints();
+		gbc_lblPercentageSplitOf.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPercentageSplitOf.gridx = 0;
+		gbc_lblPercentageSplitOf.gridy = 6;
+		contentPane.add(lblPercentageSplitOf, gbc_lblPercentageSplitOf);
+
+		textField = new JTextField();
+		textField.setText("0.4");
+		GridBagConstraints gbc_textField = new GridBagConstraints();
+		gbc_textField.insets = new Insets(0, 0, 0, 5);
+		gbc_textField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textField.gridx = 0;
+		gbc_textField.gridy = 7;
+		contentPane.add(textField, gbc_textField);
+		textField.setColumns(10);
+
+		textField.getDocument().addDocumentListener(new DocumentListener() {
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				onChange();
+
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				onChange();
+
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				onChange();
+
+			}
+
+			public void onChange() {
+				if (textField.getText() != null) {
+					try {
+						Algorithm.trainingSize = Double.parseDouble(textField.getText());
+					} catch (NumberFormatException e) {
+						txtrDefault.setText("Percentage split value not allowed");
+					}
 				}
+
 			}
 		});
 
@@ -171,6 +220,16 @@ public class MyGui extends JFrame {
 			public void onChange() {
 				if (txtPathToFile.getText() != null) {
 					CSVLoader.pathToCSV = txtPathToFile.getText();
+				}
+			}
+		});
+
+		chckbxDebug.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (chckbxDebug.isSelected()) {
+					Algorithm.debug = true;
+				} else if (!chckbxDebug.isSelected()) {
+					Algorithm.debug = false;
 				}
 			}
 		});

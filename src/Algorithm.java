@@ -45,7 +45,7 @@ public class Algorithm {
 		sampleList = csvLoader.getSampleList();
 
 		attributes = csvLoader.getFeatureNames();
-		
+
 		if (debug)
 			System.out.println("Starting attributes " + attributes.toString());
 
@@ -70,9 +70,13 @@ public class Algorithm {
 			// lecturer
 			// and he said it was out of scope for the assignment
 			Collections.shuffle(sampleList);
+			int trainingSetSize = 0;
 
-			// TODO taken off internet
-			int trainingSetSize = (int) Math.floor((sampleList.size() * 0.4));
+			try {
+				trainingSetSize = (int) Math.floor((sampleList.size() * trainingSize));
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			}
 
 			trainingSampleList = sampleList.subList(0, trainingSetSize);
 
@@ -193,10 +197,10 @@ public class Algorithm {
 			List<String> fields) {
 
 		List<String> localFields = new ArrayList<String>(fields);
-		
-		if(debug)
+
+		if (debug)
 			System.out.println("Starting localAttributes " + localFields.toString());
-		
+
 		// if the list of owls is empty return the most frequent type of owl in
 		// the nodes parent
 		if (samples.isEmpty()) {
@@ -212,7 +216,7 @@ public class Algorithm {
 				System.out.println("all same label");
 			return new Node(samples.get(0).getClassifier(), true);
 		}
-		
+
 		// calc attribute with the highest information gain
 		String bestFeature = BestFieldCalculator.getFieldToSplitOn(samples, localFields);
 
@@ -222,7 +226,7 @@ public class Algorithm {
 				System.out.println("best attribute is null");
 			return new Node(getMostFrequentType(samples), true);
 		}
-		
+
 		// make the root node with the bestFeature to split on and make the
 		// node not a leaf node
 		Node root = new Node(bestFeature, false);
@@ -275,7 +279,7 @@ public class Algorithm {
 		List<Sample> greaterThanSamples = subsets.get("samplesGreaterThan");
 
 		for (Sample sample : greaterThanSamples)
-			if(debug)
+			if (debug)
 				System.out.print(sample.getFeature(bestFeature) + " with type " + sample.getClassifier() + " ");
 
 		// remove the attribute from the list so that is removed from
