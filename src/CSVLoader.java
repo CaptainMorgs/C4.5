@@ -11,25 +11,30 @@ import Owls.Sample;
 //TODO test with diff no. of attributes
 public class CSVLoader {
 
-	private  ArrayList<Sample> sampleList = new ArrayList<>();
+	private ArrayList<Sample> sampleList = new ArrayList<>();
 
-	private  List<String> featureNames = new ArrayList<String>();
+	private List<String> featureNames = new ArrayList<String>();
 
-	public  String classifierFeature;
+	public String classifierFeature;
 
-	public  int classifierIndex = 4;
+	public int classifierIndex = 4;
 
-	public  String pathToCSV = "owls15.csv";
+	public static String pathToCSV = "owls15.csv";
+
+	private boolean debug;
 
 	public ArrayList<Sample> getSampleList() {
 		return sampleList;
 	}
 
-	/*public void setSampleList(ArrayList<Sample> owlList) {
-		CSVLoader.sampleList = owlList;
-	}*/
+	/*
+	 * public void setSampleList(ArrayList<Sample> owlList) {
+	 * CSVLoader.sampleList = owlList; }
+	 */
 
 	public void loadCSV() {
+		debug = Algorithm.debug;
+		
 		sampleList.clear();
 
 		BufferedReader br = null;
@@ -52,10 +57,10 @@ public class CSVLoader {
 					featureNames.add(csvLine[i]);
 
 				}
-			System.out.println(featureNames.toString());
+			if (debug)
+				System.out.println(featureNames.toString());
 			// set the classifierFeature to the last column
 			classifierFeature = csvLine[i];
-			System.out.println(classifierFeature.toString());
 
 			while ((line = br.readLine()) != null) {
 
@@ -71,14 +76,18 @@ public class CSVLoader {
 				}
 				sample.setClassifier(csvLine[j]);
 
-				System.out.println(sample.toString());
+				if (debug)
+					System.out.println(sample.toString());
 
 				sampleList.add(sample);
 
+				MyGui.fileNotFound = false;
 			}
 
 		} catch (FileNotFoundException exception) {
+			MyGui.fileNotFound = true;
 			exception.printStackTrace();
+
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -92,18 +101,13 @@ public class CSVLoader {
 				}
 			}
 		}
-
-		System.out.println("Number of samples added: " + sampleList.size());
-		System.out.println();
+		if (debug) {
+			System.out.println("Number of samples added: " + sampleList.size());
+			System.out.println();
+		}
 	}
 
 	public List<String> getFeatureNames() {
 		return featureNames;
 	}
-
-	/*
-	 * public static void setFeatureNames(List<String> featureNames) {
-	 * CSVLoader.featureNames = featureNames; }
-	 */
-
 }

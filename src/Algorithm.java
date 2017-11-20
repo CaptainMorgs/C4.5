@@ -1,25 +1,26 @@
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeSet;
 
-import Owls.Owl;
 import Owls.Sample;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
+/**
+ * Class runs the C4.5 algorithm
+ * 
+ * @author John
+ *
+ */
 public class Algorithm {
 
-	public static boolean debug = true;
+	public static boolean debug = false;
 
 	private List<Sample> sampleList, trainingSampleList, testingSampleList;
 
@@ -44,6 +45,7 @@ public class Algorithm {
 		sampleList = csvLoader.getSampleList();
 
 		attributes = csvLoader.getFeatureNames();
+		
 		if (debug)
 			System.out.println("Starting attributes " + attributes.toString());
 
@@ -191,8 +193,10 @@ public class Algorithm {
 			List<String> fields) {
 
 		List<String> localFields = new ArrayList<String>(fields);
-
-		System.out.println("Starting localAttributes " + localFields.toString());
+		
+		if(debug)
+			System.out.println("Starting localAttributes " + localFields.toString());
+		
 		// if the list of owls is empty return the most frequent type of owl in
 		// the nodes parent
 		if (samples.isEmpty()) {
@@ -208,6 +212,7 @@ public class Algorithm {
 				System.out.println("all same label");
 			return new Node(samples.get(0).getClassifier(), true);
 		}
+		
 		// calc attribute with the highest information gain
 		String bestFeature = BestFieldCalculator.getFieldToSplitOn(samples, localFields);
 
@@ -217,8 +222,8 @@ public class Algorithm {
 				System.out.println("best attribute is null");
 			return new Node(getMostFrequentType(samples), true);
 		}
-		// TODO think of alternative to bestAttribute
-		// make the root node with the bestAttribute to split on and make the
+		
+		// make the root node with the bestFeature to split on and make the
 		// node not a leaf node
 		Node root = new Node(bestFeature, false);
 
@@ -270,7 +275,8 @@ public class Algorithm {
 		List<Sample> greaterThanSamples = subsets.get("samplesGreaterThan");
 
 		for (Sample sample : greaterThanSamples)
-			System.out.print(sample.getFeature(bestFeature) + " with type " + sample.getClassifier() + " ");
+			if(debug)
+				System.out.print(sample.getFeature(bestFeature) + " with type " + sample.getClassifier() + " ");
 
 		// remove the attribute from the list so that is removed from
 		// consideration
@@ -304,7 +310,7 @@ public class Algorithm {
 	private static String getMostFrequentType(List<Sample> samples) {
 
 		if (samples.isEmpty()) {
-			if(debug)
+			if (debug)
 				System.out.println("empty list");
 			return null;
 		}
@@ -326,8 +332,6 @@ public class Algorithm {
 		return max.getKey().getClassifier();
 
 	}
-	
-	
 
 	/**
 	 * Checks if a list of samples all have the same label, e.g. all of type
@@ -339,7 +343,7 @@ public class Algorithm {
 	private static boolean checkAllSameLabel(List<Sample> samples) {
 
 		if (samples.isEmpty()) {
-			if(debug)
+			if (debug)
 				System.out.println("empty list");
 			return false;
 		}

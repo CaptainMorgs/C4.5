@@ -1,43 +1,48 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.Map.Entry;
 
-import Owls.Owl;
 import Owls.Sample;
 
+/**
+ * Class calculates the best field to split the list on
+ * 
+ * @author John
+ *
+ */
 public class BestFieldCalculator {
 
 	private static Double splitValue;
 
-	private static boolean debug = Algorithm.debug;
+	private static boolean debug;
 
 	public static Double bestSplitValue;
 
-	// Labels to classify as
-	private static String label1 = "BarnOwl";
-	private static String label2 = "LongEaredOwl";
-	private static String label3 = "SnowyOwl";
-
-	/*
-	 * Returns best attribute owls, remaining attributes Returns null if no
-	 * attribute has positive information gain Returns null if no candidate
-	 * splits remaining
+	/**
+	 * Returns the field to split on that will give the highest information
+	 * gain, i.e. the greatest reduction in entropy
+	 * 
+	 * @param samples
+	 * @param fields
+	 * @return
 	 */
 	public static String getFieldToSplitOn(List<Sample> samples, List<String> fields) {
+		debug =  Algorithm.debug;
+		
 		double maxInfoGain = 0.0;
-		String bestAtt = null;
+		String bestField = null;
 
 		for (String field : fields) {
 			Double infoGain = getMaxInformationGain(samples, field);
-			System.out.println("Gain of attribute " + field + " is " + infoGain);
+			if (debug)
+				System.out.println("Gain of field " + field + " is " + infoGain);
 
 			if (infoGain > maxInfoGain) {
 				maxInfoGain = infoGain;
-				bestAtt = field;
+				bestField = field;
+
 				// bestSplitValue gets split value of numeric attribute with
 				// highest gain
 				bestSplitValue = splitValue;
@@ -52,7 +57,7 @@ public class BestFieldCalculator {
 			}
 		}
 
-		return bestAtt;
+		return bestField;
 	}
 
 	/**
@@ -67,37 +72,40 @@ public class BestFieldCalculator {
 		if (samples.isEmpty())
 			return 0.0;
 
-		// Get list of possible split points
-		// TODO use something other than a tree set
-		TreeSet<Double> values = new TreeSet<Double>();
+		// Get list of possible split values
+
+		List<Double> possibleSplitValues = new ArrayList<Double>();
+
+		List<Double> values = new ArrayList<>();
+
 		for (Sample sample : samples)
 			values.add(sample.getFeature(attribute));
 
-		List<Double> possibleSplitValues = new ArrayList<Double>();
-		// TODO change this
-		Iterator<Double> num1 = values.iterator();
-		Iterator<Double> num2 = values.iterator();
-		if (num2.hasNext())
-			num2.next();
-		while (num2.hasNext())
-			possibleSplitValues.add((num1.next() + num2.next()) / 2);
+		for (int i = 0; i < values.size() - 1; i++) {
+			possibleSplitValues.add((values.get(i) + values.get(i + 1)) / 2);
+		}
 
 		if (debug)
 			System.out.println("Possible Splits " + possibleSplitValues.toString());
 
-		// Find maximum gain from among possible split points
+		// Find maximum info gain from among possible split points
 		double maxInfoGain = 0.0;
+
 		splitValue = 0.0;
+
 		for (Double split : possibleSplitValues) {
+
 			double infoGain = getEntropy(samples) - getEntropy(samples, attribute, split);
 
 			if (debug)
 				System.out.println("gain " + infoGain);
+
 			if (infoGain > maxInfoGain) {
 				maxInfoGain = infoGain;
 				splitValue = split;
 			}
 		}
+
 		return maxInfoGain;
 	}
 
