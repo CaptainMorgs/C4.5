@@ -1,9 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Node<T> {
-    public List<Node<T>> children = new ArrayList<Node<T>>();
-    private Node<T> parent = null;
+public class MyNode<T> {
+    public List<MyNode<T>> children = new ArrayList<MyNode<T>>();
+    private MyNode<T> parent = null;
     public String attributeName;
     public boolean isLeaf;
     public double splitValue;
@@ -14,7 +14,7 @@ public class Node<T> {
         this.data = data;
     }*/
     
-    public Node(String attributeName, boolean terminal) {
+    public MyNode(String attributeName, boolean terminal) {
         this.attributeName = attributeName;
         this.isLeaf = terminal;
     }
@@ -40,11 +40,11 @@ public class Node<T> {
         this.attributeName = attributeName;
     }*/
     
-    public List<Node<T>> getChildren() {
+    public List<MyNode<T>> getChildren() {
         return children;
     }
 
-    public void setParent(Node<T> parent) {
+    public void setParent(MyNode<T> parent) {
      //   parent.addChild(this);
         this.parent = parent;
     }
@@ -55,7 +55,7 @@ public class Node<T> {
         this.children.add(child);
     }*/
 
-    public void addChild(Node<T> child) {
+    public void addChild(MyNode<T> child) {
         child.setParent(this);
         this.children.add(child);
     }
@@ -92,7 +92,7 @@ public class Node<T> {
 	public void print(){
 		System.out.println("Label " + attributeName);
 		
-		for(Node child: children) {
+		for(MyNode child: children) {
 			child.print();
 		}
 		
