@@ -1,4 +1,10 @@
-
+/**
+ * Class holds information about the results of running the C4.5 algorithm on
+ * some samples
+ * 
+ * @author John
+ *
+ */
 public class Result {
 
 	private int numCorrectlyClassified;

@@ -1,16 +1,13 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import Owls.Sample;
-
 public class DecisionTreeGenerator {
 
 	private static boolean debug;
-	
+
 	/**
 	 * Generate a C4.5 decision tree using samples and the list of fields
 	 * 
@@ -19,12 +16,11 @@ public class DecisionTreeGenerator {
 	 * @param fields
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static MyNode<List<Sample>> generateDecisionTree(List<Sample> samples, List<Sample> parentSamples,
 			List<String> fields) {
 
-		debug = Algorithm.debug;
-		
+		debug = C45.debug;
+
 		List<String> localFields = new ArrayList<String>(fields);
 
 		if (debug)
@@ -35,7 +31,7 @@ public class DecisionTreeGenerator {
 		if (samples.isEmpty()) {
 			if (debug)
 				System.out.println("owls is empty");
-			return new MyNode(getMostFrequentType(parentSamples), true);
+			return new MyNode<List<Sample>>(getMostFrequentType(parentSamples), true);
 		}
 
 		// if the list of owls all have the same type then return that type,
@@ -43,7 +39,7 @@ public class DecisionTreeGenerator {
 		if (checkAllSameLabel(samples)) {
 			if (debug)
 				System.out.println("all same label");
-			return new MyNode(samples.get(0).getClassifier(), true);
+			return new MyNode<List<Sample>>(samples.get(0).getClassifier(), true);
 		}
 
 		// calc attribute with the highest information gain
@@ -53,12 +49,12 @@ public class DecisionTreeGenerator {
 		if (bestFeature == null) {
 			if (debug)
 				System.out.println("best attribute is null");
-			return new MyNode(getMostFrequentType(samples), true);
+			return new MyNode<List<Sample>>(getMostFrequentType(samples), true);
 		}
 
 		// make the root node with the bestFeature to split on and make the
 		// node not a leaf node
-		MyNode root = new MyNode(bestFeature, false);
+		MyNode<List<Sample>> root = new MyNode<List<Sample>>(bestFeature, false);
 
 		// Split owls based on best attribute
 		// TODO not use subsets just use two lists
@@ -125,12 +121,10 @@ public class DecisionTreeGenerator {
 			// Add child to subtree of root
 			root.addChild(generateDecisionTree(hashMap.get(key), samples, localFields));
 
-			// child.splitValue = currentSplitValue;
-
 		}
 		return root;
 	}
-	
+
 	/**
 	 * Gets the most frequently occurring element of a list of samples
 	 * 
@@ -145,18 +139,18 @@ public class DecisionTreeGenerator {
 			return null;
 		}
 
-		Map<Sample, Integer> map = new HashMap();
+		Map<Sample, Integer> sampleCount = new HashMap<Sample, Integer>();
 
 		for (Sample sample : samples) {
-			Integer val = map.get(sample);
-			map.put(sample, val == null ? 1 : val + 1);
+			Integer val = sampleCount.get(sample);
+			sampleCount.put(sample, val == null ? 1 : val + 1);
 		}
 
 		Entry<Sample, Integer> max = null;
 
-		for (Entry<Sample, Integer> e : map.entrySet()) {
-			if (max == null || e.getValue() > max.getValue())
-				max = e;
+		for (Entry<Sample, Integer> entry : sampleCount.entrySet()) {
+			if (max == null || entry.getValue() > max.getValue())
+				max = entry;
 		}
 
 		return max.getKey().getClassifier();
@@ -178,21 +172,22 @@ public class DecisionTreeGenerator {
 			return false;
 		}
 
-		Map<Sample, Integer> map = new HashMap();
+		Map<Sample, Integer> sampleCount = new HashMap<Sample, Integer>();
 
 		for (Sample sample : samples) {
-			Integer val = map.get(sample);
-			map.put(sample, val == null ? 1 : val + 1);
+			Integer val = sampleCount.get(sample);
+			sampleCount.put(sample, val == null ? 1 : val + 1);
 		}
 
-		Entry<Sample, Integer> max = null;
+		Entry<Sample, Integer> maxCount = null;
 
-		for (Entry<Sample, Integer> e : map.entrySet()) {
-			if (max == null || e.getValue() > max.getValue())
-				max = e;
+		for (Entry<Sample, Integer> entry : sampleCount.entrySet()) {
+			if (maxCount == null || entry.getValue() > maxCount.getValue())
+				maxCount = entry;
 		}
-
-		if (max.getValue() == samples.size()) {
+		// if the maxCount is the same as the size of the list, they are all the
+		// same type
+		if (maxCount.getValue() == samples.size()) {
 			return true;
 		}
 

@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import Owls.Sample;
-
 /**
  * Class calculates the best field to split the list on
  * 
@@ -29,8 +27,8 @@ public class BestFieldCalculator {
 	 * @return
 	 */
 	public static String getFieldToSplitOn(List<Sample> samples, List<String> fields) {
-		debug =  Algorithm.debug;
-		
+		debug = C45.debug;
+
 		double maxInfoGain = 0.0;
 		String bestField = null;
 

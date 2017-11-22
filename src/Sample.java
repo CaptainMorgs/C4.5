@@ -1,25 +1,30 @@
-package Owls;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Generic class to handle a row of data in a csv file, i.e. a sample to be
+ * classified
+ * 
+ * @author John
+ *
+ */
 public class Sample {
-	
-	//the name of the features
+
+	// the name of the features
 	private List<String> featureNames = new ArrayList<String>();
-	
-	//the features
+
+	// the features
 	private List<Double> features = new ArrayList<Double>();
-	
-	//the classifier of the sample
+
+	// the classifier of the sample
 	private String classifier;
-	
-	public Double getFeature(String string){
+
+	public Double getFeature(String string) {
 		int index = featureNames.indexOf(string);
-		if(index!=-1){
+		if (index != -1) {
 			return features.get(index);
-		}
-		else{
+		} else {
 			System.err.println(string + " can not be found");
 			return 0.0;
 		}
@@ -53,6 +58,5 @@ public class Sample {
 	public String toString() {
 		return "Sample [featureNames=" + featureNames + ", features=" + features + ", classifier=" + classifier + "]";
 	}
-	
-	
+
 }

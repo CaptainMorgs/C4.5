@@ -5,36 +5,29 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import Owls.Owl;
-import Owls.Sample;
-
-//TODO test with diff no. of attributes
+/**
+ * Class loads in a .csv file
+ * 
+ * @author John
+ *
+ */
 public class CSVLoader {
 
-	private ArrayList<Sample> sampleList = new ArrayList<>();
+	private static ArrayList<Sample> sampleList = new ArrayList<>();
 
-	private List<String> featureNames = new ArrayList<String>();
+	private static List<String> featureNames = new ArrayList<String>();
 
-	public String classifierFeature;
+	public static String classifierFeature;
 
-	public int classifierIndex = 4;
+	private static int classifierIndex = 4;
 
 	public static String pathToCSV = "owls15.csv";
 
-	private boolean debug;
+	private static boolean debug;
 
-	public ArrayList<Sample> getSampleList() {
-		return sampleList;
-	}
+	public static void loadCSV() {
+		debug = C45.debug;
 
-	/*
-	 * public void setSampleList(ArrayList<Sample> owlList) {
-	 * CSVLoader.sampleList = owlList; }
-	 */
-
-	public void loadCSV() {
-		debug = Algorithm.debug;
-		
 		sampleList.clear();
 
 		BufferedReader br = null;
@@ -47,10 +40,9 @@ public class CSVLoader {
 
 			br = new BufferedReader(new FileReader(pathToCSV));
 
-			// TODO make better solution
-			// this approach only works if the classifer feature is the last
+			// this approach assumes the classifer feature is the last
 			// column in the file
-			// Assuming the first line is the column names
+			// Assuming the first row is the column names
 			if ((line = br.readLine()) != null)
 				for (i = 0; i < classifierIndex; i++) {
 					csvLine = line.split(splitter);
@@ -68,9 +60,9 @@ public class CSVLoader {
 				csvLine = line.split(splitter);
 
 				Sample sample = new Sample();
-				// TODO not have to set them for every feature, they are the
-				// same for each of them
+
 				sample.setFeatureNames(featureNames);
+
 				for (j = 0; j < i; j++) {
 					sample.getFeatures().add(Double.parseDouble(csvLine[j]));
 				}
@@ -87,7 +79,6 @@ public class CSVLoader {
 		} catch (FileNotFoundException exception) {
 			MyGui.fileNotFound = true;
 			exception.printStackTrace();
-
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -107,7 +98,11 @@ public class CSVLoader {
 		}
 	}
 
-	public List<String> getFeatureNames() {
+	public static List<String> getFeatureNames() {
 		return featureNames;
+	}
+
+	public static ArrayList<Sample> getSampleList() {
+		return sampleList;
 	}
 }

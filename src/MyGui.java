@@ -1,5 +1,4 @@
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -8,13 +7,11 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.JButton;
-import javax.swing.AbstractAction;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Action;
 import javax.swing.JTextArea;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -22,18 +19,22 @@ import java.awt.Insets;
 import javax.swing.JTextField;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 
+/**
+ * GUI class that creates a GUI using the WindowBuilder eclipse plugin
+ * 
+ * @author John
+ *
+ */
 public class MyGui extends JFrame {
 
+	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private final Action action = new SwingAction();
-	private final Action action_1 = new SwingAction_1();
-	private Algorithm algorithm = new Algorithm();
+	private C45 algorithm = new C45();
 	private JTextField txtPathToFile;
-	public static JTextArea txtrDefault;
-	public static boolean fileNotFound = false;
+	private static JTextArea txtrDefault;
 	private JTextField textField;
+	public static boolean fileNotFound = false;
 
 	/**
 	 * Launch the application.
@@ -89,15 +90,14 @@ public class MyGui extends JFrame {
 				algorithm.runC45();
 
 				List<Result> results = new ArrayList<>();
-				results = Algorithm.results;
+				results = C45.results;
 				String resultStr = "";
 				for (Result result : results) {
 					resultStr += (result.toString() + "\n");
 				}
-				resultStr += ("Average Classification Accuracy = "
-						+ Algorithm.getAverageClassificationAccuracy(results));
+				resultStr += ("Average Classification Accuracy = " + C45.getAverageClassificationAccuracy(results));
 
-				if (Algorithm.outputToFile) {
+				if (C45.outputToFile) {
 					resultStr += "\n Results file generated...";
 				}
 				txtrDefault.setText(resultStr);
@@ -117,9 +117,9 @@ public class MyGui extends JFrame {
 		chckbxOutputToFile.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (chckbxOutputToFile.isSelected()) {
-					Algorithm.outputToFile = true;
+					C45.outputToFile = true;
 				} else {
-					Algorithm.outputToFile = false;
+					C45.outputToFile = false;
 				}
 			}
 		});
@@ -188,7 +188,7 @@ public class MyGui extends JFrame {
 			public void onChange() {
 				if (textField.getText() != null) {
 					try {
-						Algorithm.trainingSize = Double.parseDouble(textField.getText());
+						C45.trainingSize = Double.parseDouble(textField.getText());
 					} catch (NumberFormatException e) {
 						txtrDefault.setText("Percentage split value not allowed");
 					}
@@ -227,32 +227,12 @@ public class MyGui extends JFrame {
 		chckbxDebug.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (chckbxDebug.isSelected()) {
-					Algorithm.debug = true;
+					C45.debug = true;
 				} else if (!chckbxDebug.isSelected()) {
-					Algorithm.debug = false;
+					C45.debug = false;
 				}
 			}
 		});
 
-	}
-
-	private class SwingAction extends AbstractAction {
-		public SwingAction() {
-			putValue(NAME, "SwingAction");
-			putValue(SHORT_DESCRIPTION, "Some short description");
-		}
-
-		public void actionPerformed(ActionEvent e) {
-		}
-	}
-
-	private class SwingAction_1 extends AbstractAction {
-		public SwingAction_1() {
-			putValue(NAME, "SwingAction_1");
-			putValue(SHORT_DESCRIPTION, "Some short description");
-		}
-
-		public void actionPerformed(ActionEvent e) {
-		}
 	}
 }

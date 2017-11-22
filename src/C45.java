@@ -3,22 +3,15 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import Owls.Sample;
-
-@SuppressWarnings({ "rawtypes", "unchecked" })
 /**
  * Class runs the C4.5 algorithm
  * 
  * @author John
  *
  */
-public class Algorithm {
+public class C45 {
 
 	public static boolean debug = false;
 
@@ -36,29 +29,32 @@ public class Algorithm {
 	public static double classificationAccuracyAvg = 0.0;
 
 	public static double trainingSize = 0.4;
-	
-	public static List <MyNode<List<Sample>>> decisionTreeList = new ArrayList<>();
 
+	public static List<MyNode<List<Sample>>> decisionTreeList = new ArrayList<>();
+
+	/**
+	 * Runs the C4.5 algorithm
+	 */
 	public void runC45() {
 
-		CSVLoader csvLoader = new CSVLoader();
-		csvLoader.loadCSV();
+		CSVLoader.loadCSV();
 
-		sampleList = csvLoader.getSampleList();
+		sampleList = CSVLoader.getSampleList();
 
-		attributes = csvLoader.getFeatureNames();
+		attributes = CSVLoader.getFeatureNames();
 
 		if (debug)
 			System.out.println("Starting attributes " + attributes.toString());
 
 		testTenTimes(sampleList, attributes);
-		
-		MyGraph.generateGraph();
+
+		GraphGenerator.generateGraph();
+
 	}
 
 	/**
 	 * Run the C4.5 alg on test data 10 times with different random divisions 10
-	 * times
+	 * times. Could improve by parameterising the no of runs.
 	 * 
 	 * @param sampleList
 	 * 
@@ -89,12 +85,13 @@ public class Algorithm {
 			if (debug)
 				System.out.println("Calling generateDecisionTree with fields " + attributes.toString());
 
-			MyNode<List<Sample>> decisionTree = DecisionTreeGenerator.generateDecisionTree(trainingSampleList, trainingSampleList, attributes);
+			MyNode<List<Sample>> decisionTree = DecisionTreeGenerator.generateDecisionTree(trainingSampleList,
+					trainingSampleList, attributes);
 
-			Result result = testWithDecisionTree(testingSampleList, decisionTree);
+			Result result = applyDecisionTree(testingSampleList, decisionTree);
 
 			results.add(result);
-			
+
 			decisionTreeList.add(decisionTree);
 		}
 
@@ -109,26 +106,28 @@ public class Algorithm {
 	 */
 	private static void outputPredictedAndActualValuesToFile(List<Result> results, String fileName) {
 		if (outputToFile) {
+			PrintWriter out = null;
 			try {
-				PrintWriter out = new PrintWriter(fileName);
+				out = new PrintWriter(fileName);
 				for (Result result : results) {
 					out.println(result.getFileSummary());
 				}
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				out.close();
 			}
 		}
 	}
 
 	/**
-	 * Tests a decision tree with a list of samples
+	 * Applies a decision tree to a list of samples
 	 * 
 	 * @param samples
 	 * @param decisionTree
 	 * @return
 	 */
-	private static Result testWithDecisionTree(List<Sample> samples, MyNode<List<Sample>> decisionTree) {
+	private static Result applyDecisionTree(List<Sample> samples, MyNode<List<Sample>> decisionTree) {
 
 		int correctlyClassified = 0;
 		double accuracy = 0.0;
@@ -173,29 +172,20 @@ public class Algorithm {
 	 * @param node
 	 * @return
 	 */
-	private static String classify(Sample sample, MyNode node) {
+	private static String classify(Sample sample, MyNode<List<Sample>> node) {
 		// if a node is a leaf then return the nodes attribute name
 		if (node.isLeaf) {
 			return node.attributeName;
 		}
 		// traverse the tree either left or right by comparing the the samples
 		// value to the nodes split value
-		// TODO tidy up
 		double sampleValue = sample.getFeature(node.attributeName);
 
 		if (sampleValue <= node.splitValue)
-			return classify(sample, (MyNode) node.children.get(0));
+			return classify(sample, (MyNode<List<Sample>>) node.children.get(0));
 
 		else
-			return classify(sample, (MyNode) node.children.get(1));
+			return classify(sample, (MyNode<List<Sample>>) node.children.get(1));
 
 	}
-
-	
-
-	// }
-
-	// TODO rewrite
-	
-
 }
