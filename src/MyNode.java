@@ -19,6 +19,11 @@ public class MyNode<T> {
         this.isLeaf = terminal;
     }
     
+    public MyNode(String attributeName, boolean terminal, double splitValue) {
+        this.attributeName = attributeName;
+        this.isLeaf = terminal;
+    }
+    
     /*public Node(String attributeName, Node parent) {
         this.attributeName = attributeName;
     }*/
