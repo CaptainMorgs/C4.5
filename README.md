@@ -1,3 +1,3 @@
 # C4.5
 
-![alt text](https://imgur.com/a/ivKSi)
+![alt text](https://i.imgur.com/HpDA3Ns.png)
